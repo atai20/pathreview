@@ -22,7 +22,7 @@ I selected this Tier 1 issue because it has a clearly defined scope and focuses 
 
 ## Week 8 — Reproduction & solution planning
 
-**Reproduction commit link:** (filled after push)
+**Reproduction commit link:** https://github.com/atai20/pathreview/commit/1525aecc44db2930c43003eb595f5b7f337dde65
 
 **Reproduction summary:**
 I reproduced issue #152 locally by running the exact snippet from the GitHub issue against the pre-fix `_is_supported` / `_extract_claims` logic in `rag/evaluator/faithfulness_checker.py`. For feedback `Knows Python. Knows SQL.` with context chunks `python expert` and `sql expert`, only `Knows Python` was extracted (because `Knows SQL` is ≤10 characters), meaningful overlap was a single token `python`, and `check()` returned `0.0` even though both skills are clearly present in context. The same root cause also explains the related failing unit tests `test_partial_support_returns_middle_score`, `test_multiple_context_chunks`, and `test_multiple_claims_varying_support`.
@@ -36,7 +36,7 @@ old check score: 0.0
 expected if supported: 1.0
 ```
 
-**PLAN.md link:** (filled after push)
+**PLAN.md link:** https://github.com/atai20/pathreview/blob/fix/152-review-card-update/PLAN.md
 
 **Walkthrough video (recommended):**
 
