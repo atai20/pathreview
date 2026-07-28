@@ -19,3 +19,26 @@ The issue affects the faithfulness checker on the review page. Currently, very s
 ## Selection notes ("Is this right for me?" checklist)
 
 I selected this Tier 1 issue because it has a clearly defined scope and focuses on fixing a single bug rather than implementing a new feature. Based on the issue description, I expect to locate the relevant files without needing to understand the entire codebase and modify only a small number of files. The issue uses technologies I am already familiar with, and I can verify the fix by running the application locally and testing that short claims are correctly marked as supported. This makes it an appropriate first open-source contribution that I can complete within the expected timeframe.
+
+## Week 8 — Reproduction & solution planning
+
+**Reproduction commit link:** (filled after push)
+
+**Reproduction summary:**
+I reproduced issue #152 locally by running the exact snippet from the GitHub issue against the pre-fix `_is_supported` / `_extract_claims` logic in `rag/evaluator/faithfulness_checker.py`. For feedback `Knows Python. Knows SQL.` with context chunks `python expert` and `sql expert`, only `Knows Python` was extracted (because `Knows SQL` is ≤10 characters), meaningful overlap was a single token `python`, and `check()` returned `0.0` even though both skills are clearly present in context. The same root cause also explains the related failing unit tests `test_partial_support_returns_middle_score`, `test_multiple_context_chunks`, and `test_multiple_claims_varying_support`.
+
+**Reproduction evidence (observed locally):**
+```text
+claims extracted: ['Knows Python']
+  claim='Knows Python' supported=False
+    meaningful overlap: {'python'}
+old check score: 0.0
+expected if supported: 1.0
+```
+
+**PLAN.md link:** (filled after push)
+
+**Walkthrough video (recommended):**
+
+**Blockers or open questions:**
+Need to keep the two-token rule for longer material claims so lowering the floor globally does not create false positives (for example `Python expert` matching on `python` alone). Partial-score calibration for middle-range tests is the main tuning risk going into implementation.
