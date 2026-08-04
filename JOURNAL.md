@@ -60,7 +60,7 @@ None.
 
 ### Check-in 2 (end of week)
 
-**PR link:** (filled after PR is opened)
+**PR link:** https://github.com/ascherj/pathreview/pull/731
 
 **Branch:** `fix/152-review-card-update`
 
