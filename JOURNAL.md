@@ -78,3 +78,33 @@ Updated `FaithfulnessChecker` so short grounded claims like `Knows Python` / `Kn
 - Touched files pass `ruff`, `black --check`, and `mypy --strict` on `rag/evaluator/faithfulness_checker.py`.
 - `tests/unit/test_faithfulness_checker.py`: 27 passed.
 - Repo-wide `make test-unit` / `make check` may still report pre-existing failures unrelated to this change (missing optional deps / existing lint debt on untouched modules). This contribution does not introduce new failures in the faithfulness checker path.
+
+## Week 10 — Iteration & reflection
+
+### Reviewer feedback
+
+**Feedback received:** [ ] Yes  [x] No — still awaiting review
+
+**Summary of feedback:**
+No reviewer or maintainer comments landed on https://github.com/ascherj/pathreview/pull/731 by the end of Week 10. That matches the Summer 2026 note that reviewer feedback is not a feature of this cohort, so I documented the empty review state and moved on to reflection.
+
+**How you responded:**
+
+---
+
+### Reflection
+
+**What was harder than you expected?**
+The hard part was not finding the one-line bug — `_is_supported()` requiring `len(meaningful_overlap) >= 2` was obvious once I reproduced the issue. The surprise was how many nearby behaviors had to move with it. Lowering the threshold globally would make `Python expert` pass on a lone `python` match and break the safety the original rule was trying to keep. I also did not expect claim extraction (`len > 10`) and naive `.split()` punctuation (`Python,` vs `python`) to be part of why the related unit tests failed. Getting a middle score for partial support meant changing from a binary supported-count ratio to graded per-claim scores, which was more design work than a Tier 1 “flip one condition” fix looked like from the issue title alone.
+
+**What did you learn about working in a large codebase?**
+In my own projects I can change APIs freely. Here the tests in `tests/unit/test_faithfulness_checker.py` were the real contract: `_is_supported` still had to stay a boolean, full-support and no-support cases still had to hold, and I had to treat repo-wide `make test-unit` noise as pre-existing debt instead of something I owned. Tracing from the issue snippet → `FaithfulnessChecker.check` → `_extract_claims` / `_is_supported` → `EvalSuite` showed how a small evaluator heuristic can affect overall quality scores without touching the UI. Contributing meant reading surrounding callers and matching conventions (docstrings, ruff/black/mypy on touched files, conventional commits) rather than rewriting the module the way I would in a greenfield app.
+
+**How did AI tools help — and where did they fall short?**
+AI was strongest for navigation and first-pass scaffolding: locating `faithfulness_checker.py`, drafting PLAN.md sections, and suggesting regression cases like `Knows SQL` extraction and punctuation overlap. It fell short when the fix needed a product judgment — whether one-token support should apply to every short claim or only `Knows X` / bare forms. Early “just use `>= 1`” suggestions would have over-loosened material claims. I still had to run the issue reproduction myself, compare against the three related failing tests, and decide on the partial-score cap (`0.4`) so middle-range assertions stayed honest.
+
+**What would you do differently if you started over?**
+I would reproduce against `main` and write PLAN.md *before* landing implementation commits, so Week 8 and Week 9 history read in the intended order. I would also add the regression tests in the same commit as the first behavioral change, not after, and open the draft PR earlier in Week 9 specifically to ask a classmate to pressure-test the one-token exception boundary (`Python expert` vs `Knows Python`). Finally, I would run a baseline `make test-unit` on clean `main` on day one and save the failure list, so PR notes about pre-existing failures were evidence from the start rather than reconstructed later.
+
+**What are you most proud of from this module?**
+The restraint in the fix: keeping the two-token floor for material claims while still making the issue’s short `Knows Python. Knows SQL.` example score `1.0`. That felt like a real contribution tradeoff — solving the reported bug without turning the faithfulness checker into “any shared keyword counts as supported.”
